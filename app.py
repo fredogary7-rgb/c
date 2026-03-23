@@ -518,8 +518,7 @@ def inscription_page():
     return render_template("inscription.html", code_ref=ref_code)
 
 
-PUBLIC_API_KEY = "SP_y7QKkaamPsVTlw8GDDGyzlJ7bmPUvdLorOQqWUXfRLI_AP"
-PRIVATE_SECRET_KEY = "SP_-YQFuI5M9B1H2bNSNycwI_YQBc_kXkGACp-mLoBdWqI"
+PUBLIC_API_KEY = "SP_DQnD9bXH0-vd5R-jxtc0EXUsa_f0wUxBzCkW0AhCu6Q_AP"
 
 def obtenir_token():
     url = "https://soleaspay.com/api/action/auth"
@@ -612,7 +611,7 @@ def reset_password(username):
 
     return f"Mot de passe réinitialisé pour {username} : {nouveau_mdp}"
 
-SOLEAS_API_KEY = "SP_y7QKkaamPsVTlw8GDDGyzlJ7bmPUvdLorOQqWUXfRLI_AP"
+SOLEAS_API_KEY = "SP_DQnD9bXH0-vd5R-jxtc0EXUsa_f0wUxBzCkW0AhCu6Q_AP"
 SOLEAS_WEBHOOK_SECRET = "d3babfd8013edc16ef47f1b1b7caa088518056067af81ff6defac5e8aefb0ef947c32b4ceac5b11e3b89ac9d79685d6fd424f5da53f831cfd2fb3af9efeae566"
 
 SERVICES = {
