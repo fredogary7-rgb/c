@@ -783,12 +783,12 @@ def dashboard_bloque():
             "wallet": phone,  # ✅ NUMÉRO SAISI PAR L’UTILISATEUR
             "amount": amount,
             "currency": "XOF",
-            "order_id": f"NOVA-{new_depot.id}",
-            "description": f"Activation Nova {user.username} DEPOT_ID={new_depot.id}",
+            "order_id": f"GLOW-{new_depot.id}",
+            "description": f"Activation Glow {user.username} DEPOT_ID={new_depot.id}",
             "payer": fullname,
             "payerEmail": user.email,
-            "successUrl": "https://nova-trade.cc/dashboard/pay/ok",
-            "failureUrl": "https://nova-trade.cc/dashboard_bloque",
+            "successUrl": "https://glowthaffiliate.com/dashboard/pay/ok",
+            "failureUrl": "https://glowthaffiliate.com/dashboard_bloque",
         }
 
         headers = {
@@ -874,10 +874,10 @@ def webhook_soleaspay():
     details = data.get("data", {})
     external_reference = details.get("external_reference")
 
-    if not external_reference.startswith("NOVA-"):
+    if not external_reference.startswith("GLOW-"):
         return jsonify({"ignored": True})
 
-    depot_id = int(external_reference.replace("NOVA-", ""))
+    depot_id = int(external_reference.replace("GLOW-", ""))
 
     depot = db.session.get(Depot, depot_id)
 
