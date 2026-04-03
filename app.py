@@ -285,7 +285,7 @@ def donner_commission(parrain_username, montant_depot):
         return
 
     # --- NIVEAU 1 ---
-    commission_niveau1 = 2000
+    commission_niveau1 = 1800
 
     parrain.solde_revenu = (parrain.solde_revenu or 0) + commission_niveau1
     parrain.solde_parrainage = (parrain.solde_parrainage or 0) + commission_niveau1
@@ -297,7 +297,7 @@ def donner_commission(parrain_username, montant_depot):
     if parrain.parrain:
         parrain2 = User.query.filter_by(username=parrain.parrain).first()
         if parrain2:
-            commission_niveau2 = 700
+            commission_niveau2 = 600
 
             parrain2.solde_revenu = (parrain2.solde_revenu or 0) + commission_niveau2
             parrain2.solde_parrainage = (parrain2.solde_parrainage or 0) + commission_niveau2
@@ -309,7 +309,7 @@ def donner_commission(parrain_username, montant_depot):
             if parrain2.parrain:
                 parrain3 = User.query.filter_by(username=parrain2.parrain).first()
                 if parrain3:
-                    commission_niveau3 = 300
+                    commission_niveau3 = 400
 
                     parrain3.solde_revenu = (parrain3.solde_revenu or 0) + commission_niveau3
                     parrain3.solde_parrainage = (parrain3.solde_parrainage or 0) + commission_niveau3
