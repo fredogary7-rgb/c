@@ -1170,7 +1170,7 @@ def apk_page():
         {
             "name": "Netflix",
             "filename": "Netflix.apk",
-            "link": "https://drive.google.com/file/d/1afSa24_oVoTWRCgpO07Lbu4qjKMUhwLC/view?usp=drivesdk"
+            "link": "https://drive.google.com/file/d/1pA-kDRtQft7idhJiVXIkfmMhhShkk59N/view?usp=drivesdk"
         },
         {
             "name": "Chat",
