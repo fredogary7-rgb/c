@@ -74,7 +74,7 @@
 <div class="container">
     <div class="yt-header">
         <div class="yt-logo"><i class="fab fa-youtube"></i> YouTube</div>
-        <div class="points-pill">+20 Points</div>
+        <div class="points-pill">+100 XOF</div>
     </div>
 
     <div class="video-box">
@@ -88,7 +88,7 @@
         <div class="overlay-msg">
             <i class="fa fa-circle-check" style="color: #2BA640;"></i>
             <h3>Mission Terminée</h3>
-            <p>Vous avez déjà récupéré vos points YouTube pour aujourd'hui.</p>
+            <p>Vous avez déjà récupéré vos gain YouTube pour aujourd'hui.</p>
         </div>
         {% endif %}
 
@@ -109,7 +109,7 @@
     </div>
 
     <button id="claim-btn" class="btn-claim" onclick="claimReward()">
-        RÉCUPÉRER MES 20 POINTS
+        RÉCUPÉRER MES 100 XOF
     </button>
 </div>
 
@@ -162,7 +162,7 @@
         .then(res => res.json())
         .then(data => {
             if(data.status === 'ok') {
-                alert("Félicitations ! Vos points ont été ajoutés.");
+                alert("Félicitations ! Vos gain ont été ajoutés.");
                 location.reload();
             } else {
                 alert(data.message);

@@ -74,21 +74,21 @@
             <p style="font-size: 12px; color: #718096; font-weight: 700;">Bonus Hebdomadaire</p>
             <p style="font-weight: 800; font-size: 18px;">TikTok Vision</p>
         </div>
-        <div class="points-badge">+20 Points</div>
+        <div class="points-badge">+100 XOF</div>
     </div>
 
     <div class="video-card">
         <div id="wait-screen" class="status-overlay" style="display: none;">
             <i class="fa fa-calendar-day"></i>
             <h2>Vidéo indisponible</h2>
-            <p>Revenez chaque <strong>mardi à partir de 08:00</strong> pour gagner vos points bonus.</p>
+            <p>Revenez chaque <strong>mardi à partir de 08:00</strong> pour gagner vos gain bonus.</p>
         </div>
 
         {% if user.last_tiktok_date == current_date %}
         <div class="status-overlay">
             <i class="fa fa-check-circle" style="color: var(--tt-success);"></i>
             <h2>Objectif Atteint !</h2>
-            <p>Vous avez déjà reçu vos 20 points pour aujourd'hui. Rendez-vous mardi prochain !</p>
+            <p>Vous avez déjà reçu vos 100 XOF pour aujourd'hui. Rendez-vous mardi prochain !</p>
         </div>
         {% endif %}
 
@@ -149,9 +149,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'ok') {
-                        statusText.innerText = "Points ajoutés avec succès !";
+                        statusText.innerText = "gain ajoutés avec succès !";
                         statusText.style.color = "#27AE60";
-                        alert("Félicitations ! +20 Points ajoutés.");
+                        alert("Félicitations ! +100 Points ajoutés.");
                         location.reload();
                     } else {
                         statusText.innerText = data.message;

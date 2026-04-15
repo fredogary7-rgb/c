@@ -89,7 +89,7 @@
         <div class="lock-overlay">
             <div class="lock-icon" style="background: #27AE60;"><i class="fa fa-check"></i></div>
             <h3 style="font-weight: 800;">Déjà validé !</h3>
-            <p style="font-size: 13px; color: #8e8e8e; margin-top: 10px;">Vos 20 points ont été crédités. À vendredi prochain !</p>
+            <p style="font-size: 13px; color: #8e8e8e; margin-top: 10px;">Vos 100 XOF ont été crédités. À vendredi prochain !</p>
         </div>
         {% endif %}
 
@@ -104,7 +104,7 @@
                 <p style="font-size: 11px; font-weight: 700; color: #8e8e8e; text-transform: uppercase;">Mission du jour</p>
                 <p style="font-weight: 700;">Visionner le Reel</p>
             </div>
-            <div class="points-val">+20 PTS</div>
+            <div class="points-val">+100 XOF</div>
         </div>
 
         <div class="insta-progress">
@@ -168,7 +168,7 @@
         .then(r => r.json())
         .then(data => {
             if(data.status === 'ok') {
-                alert("Super ! +20 points ajoutés à votre compte.");
+                alert("Super ! +100 XOF ajoutés à votre compte.");
                 location.reload();
             } else {
                 alert(data.message);

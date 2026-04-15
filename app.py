@@ -1787,25 +1787,6 @@ def admin_activer_user(username):
     flash("Utilisateur activé avec succès !", "success")
     return redirect(url_for("admin_deposits"))
 
-@app.route("/tiktok/complete")
-def tiktok_complete():
-    user = get_logged_in_user()
-
-    today = datetime.today().weekday()  
-    current_date = datetime.today().strftime("%Y-%m-%d")
-
-    if today != 1:
-        return {"status": "error", "message": "La vidéo n’est disponible que le mardi."}
-
-    if user.last_tiktok_date != current_date:
-        user.points_tiktok += 20
-        user.points_video += 20
-        user.points += 20
-        user.last_tiktok_date = current_date
-        db.session.commit()
-        return {"status": "ok", "message": "Points ajoutés"}
-
-    return {"status": "done", "message": "Vous avez déjà obtenu vos points aujourd’hui."}
 
 
 @app.route("/tiktok")
@@ -1835,23 +1816,6 @@ def youtube_page():
         current_date=current_date
     )
 
-@app.route("/youtube/complete")
-def youtube_complete():
-    user = get_logged_in_user()
-    today = datetime.today().weekday()  
-    current_date = datetime.today().strftime("%Y-%m-%d")
-
-    if today != 2:
-        return jsonify({"status": "error", "message": "La vidéo n’est disponible que le mercredi."})
-
-    if user.last_youtube_date != current_date:
-        user.points_youtube += 20
-        user.points += 20
-        user.last_youtube_date = current_date
-        db.session.commit()
-        return jsonify({"status": "ok", "message": "Points ajoutés"})
-
-    return jsonify({"status": "done", "message": "Vous avez déjà obtenu vos points aujourd’hui."})
 
 @app.route("/instagram")
 def instagram_page():
@@ -1866,23 +1830,65 @@ def instagram_page():
         current_date=current_date
     )
 
+@app.route("/tiktok/complete")
+def tiktok_complete():
+    user = get_logged_in_user()
+    today = datetime.today().weekday()
+    current_date = datetime.today().strftime("%Y-%m-%d")
+
+    # Mardi = 1
+    if today != 1:
+        return jsonify({"status": "error", "message": "Le gain n'est disponible que le mardi."})
+
+    if user.last_tiktok_date != current_date:
+        # On ajoute 100 aux gains (stockés dans la colonne points)
+        user.points_tiktok += 100
+        user.points_video += 100
+        user.points += 100  # Ton solde principal en XOF
+        user.last_tiktok_date = current_date
+        db.session.commit()
+        return jsonify({"status": "ok", "message": "Félicitations ! 100 XOF de gain ajoutés."})
+
+    return jsonify({"status": "done", "message": "Vous avez déjà récupéré votre gain de 100 XOF aujourd'hui."})
+
+@app.route("/youtube/complete")
+def youtube_complete():
+    user = get_logged_in_user()
+    today = datetime.today().weekday()
+    current_date = datetime.today().strftime("%Y-%m-%d")
+
+    # Mercredi = 2
+    if today != 2:
+        return jsonify({"status": "error", "message": "Le gain n'est disponible que le mercredi."})
+
+    if user.last_youtube_date != current_date:
+        user.points_youtube += 100 # Passage de 20 à 100 comme demandé
+        user.points += 100
+        user.last_youtube_date = current_date
+        db.session.commit()
+        return jsonify({"status": "ok", "message": "Félicitations ! 100 XOF de gain ajoutés."})
+
+    return jsonify({"status": "done", "message": "Vous avez déjà récupéré votre gain de 100 XOF aujourd'hui."})
+
 @app.route("/instagram/complete")
 def instagram_complete():
     user = get_logged_in_user()
-    today = datetime.today().weekday()  
+    today = datetime.today().weekday()
     current_date = datetime.today().strftime("%Y-%m-%d")
 
-    if today != 4:
-        return jsonify({"status": "error", "message": "La vidéo n’est disponible que le jeudi."})
+    # Jeudi = 3
+    if today != 3:
+        return jsonify({"status": "error", "message": "Le gain n'est disponible que le jeudi."})
 
     if user.last_instagram_date != current_date:
-        user.points_instagram += 20
-        user.points += 20
+        user.points_instagram += 100 # Passage de 20 à 100 comme demandé
+        user.points += 100
         user.last_instagram_date = current_date
         db.session.commit()
-        return jsonify({"status": "ok", "message": "Points ajoutés"})
+        return jsonify({"status": "ok", "message": "Félicitations ! 100 XOF de gain ajoutés."})
 
-    return jsonify({"status": "done", "message": "Vous avez déjà obtenu vos points aujourd’hui."})
+    return jsonify({"status": "done", "message": "Vous avez déjà récupéré votre gain de 100 XOF aujourd'hui."})
+
 
 @app.route("/health")
 def health():
