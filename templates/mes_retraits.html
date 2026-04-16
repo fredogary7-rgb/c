@@ -94,8 +94,8 @@
         {% for r in retraits %}
         <div class="transaction-card">
             <div class="tx-left">
-                <div class="tx-icon {% if r.statut == 'en_attente' %}bg-pending{% elif r.statut == 'complete' %}bg-success{% else %}bg-danger{% endif %}">
-                    <i class="fa {% if r.statut == 'en_attente' %}fa-clock{% elif r.statut == 'complete' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                <div class="tx-icon {% if r.statut == 'en_attente' %}bg-pending{% elif r.statut == 'validé' %}bg-success{% else %}bg-danger{% endif %}">
+                    <i class="fa {% if r.statut == 'en_attente' %}fa-clock{% elif r.statut == 'validé' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
                 </div>
                 <div class="tx-info">
                     <b>{{ r.service_name }}</b>
