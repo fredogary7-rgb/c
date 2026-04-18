@@ -1302,8 +1302,8 @@ def revenus_page():
 def retrait_page():
     user = get_logged_in_user()
 
-    MIN_RETRAIT = 100
-    FRAIS = 10
+    MIN_RETRAIT = 4000
+    FRAIS = 500
 
     stats = {
         "commissions_total": float(user.solde_parrainage or 0)
