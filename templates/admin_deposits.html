@@ -196,32 +196,53 @@
             </div>
         </div>
 
-        <div id="retraits" class="tab-content">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Utilisateur</th>
-                        <th>Numéro</th>
-                        <th>Montant</th>
-                        <th>Date</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in retraits %}
-                    <tr>
-                        <td>{{ r.username_display }}</td>
-                        <td>{{ r.phone }}</td>
-                        <td style="color: var(--success); font-weight: 800;">+{{ r.montant }} XOF</td>
-                        <td>{{ r.date.strftime('%d/%m %H:%M') }}</td>
-                        <td><span class="badge bg-success-light">Terminé</span></td>
-                    </tr>
+<div id="retraits" class="tab-content">
+    <table>
+        <thead>
+            <tr>
+                <th>Utilisateur</th>
+                <th>Numéro</th>
+                <th>Montant</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in retraits %}
+            <tr>
+                <td><strong>{{ r.username_display }}</strong></td>
+                <td>{{ r.phone }}</td>
+                <td style="color: var(--primary); font-weight: 800;">{{ r.montant }} XOF</td>
+                <td>
+                    {% if r.statut == 'en_attente' %}
+                        <span class="badge" style="background: #FFF9E6; color: #D97706;">En attente</span>
+                    {% elif r.statut == 'validé' %}
+                        <span class="badge bg-success-light">Validé</span>
                     {% else %}
-                    <tr><td colspan="5" style="text-align: center; padding: 40px; color: #A0AEC0;">Aucun retrait enregistré.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        <span class="badge bg-danger-light">Refusé</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if r.statut == 'en_attente' %}
+                    <div class="btn-group">
+                        <a href="{{ url_for('valider_retrait', retrait_id=r.id) }}" class="btn btn-check">
+                            <i class="fa fa-check"></i> Valider
+                        </a>
+                        <a href="{{ url_for('refuser_retrait', retrait_id=r.id) }}" class="btn btn-cross">
+                            <i class="fa fa-times"></i> Refuser
+                        </a>
+                    </div>
+                    {% else %}
+                        <small style="color: #A0AEC0;">Traité</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align: center; padding: 40px; color: #A0AEC0;">Aucun retrait à traiter.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
     </div>
 
