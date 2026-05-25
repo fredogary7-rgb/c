@@ -732,57 +732,86 @@ from urllib.parse import urlencode
 def webhook_soleaspay():
 
     received_key = request.headers.get("x-private-key")
-
     if received_key != SOLEAS_WEBHOOK_SECRET:
         return jsonify({"error": "Unauthorized"}), 403
 
     data = request.get_json()
 
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
     details = data.get("data", {})
     external_reference = details.get("external_reference")
 
-    if not external_reference.startswith("GLOW-"):
-        return jsonify({"ignored": True})
+    if not external_reference:
+        return jsonify({"error": "No reference"}), 400
 
-    depot_id = int(external_reference.replace("GLOW-", ""))
+    print("WEBHOOK REÇU :", external_reference)
 
-    depot = db.session.get(Depot, depot_id)
+    # ======================
+    # PAIEMENT LUMINA
+    # ======================
 
-    if not depot:
-        return jsonify({"error": "Depot not found"}), 404
+    if external_reference.startswith("GLO-"):
 
-    if depot.statut == "valide":
-        return jsonify({"received": True})
+        depot_id = int(external_reference.replace("GLO-", ""))
 
-    success = data.get("success")
-    status = data.get("status")
+        depot = db.session.get(Depot, depot_id)
 
-    if success and status == "SUCCESS":
+        if not depot:
+            return jsonify({"error": "Depot not found"}), 404
 
-        amount = int(float(details.get("amount", 0)))
+        if depot.statut == "valide":
+            return jsonify({"received": True})
 
-        if int(depot.montant) != amount:
-            return jsonify({"error": "Wrong amount"}), 400
+        success = data.get("success")
+        status = data.get("status")
 
-        user = User.query.filter_by(username=depot.user_name).first()
+        if success and status == "SUCCESS":
 
-        depot.statut = "valide"
-        depot.reference = details.get("reference")
+            amount = int(float(details.get("amount", 0)))
 
-        user.solde_depot += depot.montant
-        user.solde_total += depot.montant
+            if int(depot.montant) != amount:
+                return jsonify({"error": "Wrong amount"}), 400
 
-        if not user.premier_depot:
-            user.premier_depot = True
-            if user.parrain:
-                donner_commission(user.parrain, depot.montant)
+            user = User.query.filter_by(username=depot.user_name).first()
 
-        db.session.commit()
+            depot.statut = "valide"
+            depot.reference = details.get("reference")
 
-    elif success is False:
+            user.solde_depot += depot.montant
+            user.solde_total += depot.montant
 
-        depot.statut = "echoue"
-        db.session.commit()
+            if not user.premier_depot:
+                user.premier_depot = True
+                if user.parrain:
+                    donner_commission(user.parrain, depot.montant)
+
+            db.session.commit()
+
+        elif success is False:
+            depot.statut = "echoue"
+            db.session.commit()
+
+    # ======================
+    # PAIEMENT NOVA
+    # ======================
+
+    elif external_reference.startswith("TF-"):
+
+        try:
+            requests.post(
+                "https://flowtoken.uk/api/webhook/soleaspay",
+                json=data,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-private-key": SOLEAS_WEBHOOK_SECRET
+                },
+                timeout=10
+            )
+
+        except Exception as e:
+            print("Erreur envoi webhook TF :", e)
 
     return jsonify({"received": True})
 
