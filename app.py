@@ -731,90 +731,148 @@ from urllib.parse import urlencode
 @app.route("/api/webhook/soleaspay", methods=["POST"])
 def webhook_soleaspay():
 
-    received_key = request.headers.get("x-private-key")
-    if received_key != SOLEAS_WEBHOOK_SECRET:
-        return jsonify({"error": "Unauthorized"}), 403
+    import logging
+    from datetime import datetime
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    print("=" * 50)
+    print("WEBHOOK RECU")
+    print("HEADERS:", dict(request.headers))
+    print("JSON:", data)
+    print("=" * 50)
 
     if not data:
         return jsonify({"error": "Invalid JSON"}), 400
 
-    details = data.get("data", {})
-    external_reference = details.get("external_reference")
+    # 🔒 sécurité
+    received_key = request.headers.get("x-private-key")
+    if not received_key or received_key != SOLEAS_WEBHOOK_SECRET:
+        return jsonify({"error": "Unauthorized"}), 403
 
-    if not external_reference:
-        return jsonify({"error": "No reference"}), 400
+    operation = data.get("operation")
+    status = str(data.get("status", "")).upper()
 
-    print("WEBHOOK REÇU :", external_reference)
+    # ======================================================
+    # 🔵 CAS DEPOT (PURCHASE = activation)
+    # ======================================================
+    if operation == "PURCHASE":
 
-    # ======================
-    # PAIEMENT LUMINA
-    # ======================
+        # 📌 récupération fiable
+        external_ref = (
+            (data.get("data") or {}).get("external_reference")
+            or data.get("externalRef")
+        )
 
-    if external_reference.startswith("GLO-"):
+        internal_ref = (
+            (data.get("data") or {}).get("reference")
+            or data.get("reference")
+        )
 
-        depot_id = int(external_reference.replace("GLO-", ""))
+        print("DEPOT external_ref:", external_ref)
+        print("DEPOT internal_ref:", internal_ref)
 
-        depot = db.session.get(Depot, depot_id)
-
-        if not depot:
-            return jsonify({"error": "Depot not found"}), 404
-
-        if depot.statut == "valide":
-            return jsonify({"received": True})
-
-        success = data.get("success")
-        status = data.get("status")
-
-        if success and status == "SUCCESS":
-
-            amount = int(float(details.get("amount", 0)))
-
-            if int(depot.montant) != amount:
-                return jsonify({"error": "Wrong amount"}), 400
-
-            user = User.query.filter_by(username=depot.user_name).first()
-
-            depot.statut = "valide"
-            depot.reference = details.get("reference")
-
-            user.solde_depot += depot.montant
-            user.solde_total += depot.montant
-
-            if not user.premier_depot:
-                user.premier_depot = True
-                if user.parrain:
-                    donner_commission(user.parrain, depot.montant)
-
-            db.session.commit()
-
-        elif success is False:
-            depot.statut = "echoue"
-            db.session.commit()
-
-    # ======================
-    # PAIEMENT NOVA
-    # ======================
-
-    elif external_reference.startswith("TF-"):
+        # ❗ validation
+        if not external_ref or not external_ref.startswith("E-"):
+            return jsonify({"error": "Invalid depot reference"}), 400
 
         try:
-            requests.post(
-                "https://flowtoken.uk/api/webhook/soleaspay",
-                json=data,
-                headers={
-                    "Content-Type": "application/json",
-                    "x-private-key": SOLEAS_WEBHOOK_SECRET
-                },
-                timeout=10
-            )
+            depot_id = int(external_ref.split("-")[1])
+        except:
+            return jsonify({"error": "Bad depot ID"}), 400
 
-        except Exception as e:
-            print("Erreur envoi webhook TF :", e)
+        depot = Depot.query.get(depot_id)
 
-    return jsonify({"received": True})
+        if not depot:
+            logging.error(f"DEPOT NOT FOUND: {external_ref}")
+            return jsonify({"error": "Depot not found"}), 404
 
+        # 🔒 anti double traitement
+        if depot.statut == "success":
+            return jsonify({"received": True}), 200
+
+        # ✔ statut mapping simple
+        if status in ["SUCCESS", "COMPLETED", "APPROVED"]:
+            depot.statut = "success"
+
+            user = db.session.get(User, depot.user_id)
+            if user:
+                user.is_active = True
+
+        elif status in ["FAILED", "REJECTED"]:
+            depot.statut = "failed"
+
+        else:
+            depot.statut = "pending"
+
+        depot.last_sync = datetime.utcnow()
+
+        db.session.commit()
+
+        logging.info(f"DEPOT UPDATED: {depot.id} -> {depot.statut}")
+
+        return jsonify({"received": True}), 200
+
+    # ======================================================
+    # 🟢 CAS RETRAIT (WITHDRAW)
+    # ======================================================
+    elif operation in ["WITHDRAW", "WITHDRAWAL"]:
+
+        details = data.get("data") or {}
+
+        reference = details.get("reference") or data.get("reference")
+
+        print("RETRAIT reference:", reference)
+
+        if not reference:
+            return jsonify({"error": "No reference"}), 400
+
+        retrait = Retrait.query.filter_by(
+            reference_soleaspay=reference
+        ).first()
+
+        if not retrait:
+            logging.error(f"RETRAIT NOT FOUND: {reference}")
+            return jsonify({"error": "Retrait not found"}), 404
+
+        # 🔒 anti double traitement
+        if retrait.statut in ["successful", "failed", "refused", "cancelled"]:
+            return jsonify({"received": True}), 200
+
+        # ✔ mapping statuts
+        if status in ["SUCCESS", "COMPLETED", "APPROVED"]:
+            new_status = "successful"
+        elif status in ["FAILED"]:
+            new_status = "failed"
+        elif status in ["REJECTED"]:
+            new_status = "refused"
+        elif status in ["CANCELLED"]:
+            new_status = "cancelled"
+        else:
+            new_status = "en_attente"
+
+        old_status = retrait.statut
+        retrait.statut = new_status
+        retrait.soleaspay_status = status
+        retrait.last_sync = datetime.utcnow()
+
+        # 💰 crédit UNE seule fois
+        if old_status != "successful" and new_status == "successful":
+            user = db.session.get(User, retrait.user_id)
+
+            if user:
+                user.total_retrait = (user.total_retrait or 0) + retrait.montant
+
+        db.session.commit()
+
+        logging.info(f"RETRAIT UPDATED: {retrait.id} -> {new_status}")
+
+        return jsonify({"received": True}), 200
+
+    # ======================================================
+    # ❌ CAS INCONNU
+    # ======================================================
+    return jsonify({"ignored": True}), 200
 
 @app.route("/paiement/soleaspay/retour")
 def bkapay_retour():
