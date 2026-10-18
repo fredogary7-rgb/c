@@ -41,7 +41,7 @@ def allowed_file(filename):
     """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-DATABASE_URL="postgresql://neondb_owner:npg_CWXz2J9SDgOl@ep-icy-glitter-abouaquq-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DATABASE_URL="postgresql://neondb_owner:npg_SzRP7LxV9uiN@ep-withered-band-b4au7q61-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 engine = create_engine(
     DATABASE_URL,
