@@ -66,7 +66,7 @@ from flask_login import LoginManager, UserMixin, current_user
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = "connexion_page" 
+login_manager.login_view = "login_page" 
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -310,7 +310,7 @@ def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not get_logged_in_user():
-            return redirect(url_for("connexion_page"))
+            return redirect(url_for("login_page"))
         return f(*args, **kwargs)
     return wrapper
 
@@ -379,8 +379,8 @@ def init_db():
     print("✅ Base de données initialisée avec succès !")
 
 
-@app.route("/inscription", methods=["GET", "POST"])
-def inscription_page():
+@app.route("/register", methods=["GET", "POST"])
+def register_page():
     ref_code = request.args.get("ref", "").strip().lower()
     session.pop("username_exists", None)
 
@@ -429,7 +429,7 @@ def inscription_page():
         if errors:
             for error in errors:
                 flash(error, "danger")
-            return render_template("inscription.html", code_ref=ref_code)
+            return render_template("register.html", code_ref=ref_code)
 
         try:
             new_user = User(
@@ -458,30 +458,30 @@ def inscription_page():
         except Exception as e:
             db.session.rollback()
             flash("Erreur lors de l’inscription : " + str(e), "danger")
-            return render_template("inscription.html", code_ref=ref_code)
+            return render_template("register.html", code_ref=ref_code)
 
-    return render_template("inscription.html", code_ref=ref_code)
+    return render_template("register.html", code_ref=ref_code)
 
 
-@app.route("/connexion", methods=["GET", "POST"])
-def connexion_page():
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
     if request.method == "POST":
         username = request.form.get("username", "").strip().lower()
         password = request.form.get("password", "").strip()
 
         if not username or not password:
             flash("Veuillez remplir tous les champs.", "danger")
-            return redirect(url_for("connexion_page"))
+            return redirect(url_for("login_page"))
 
         user = User.query.filter_by(username=username).first()
 
         if not user or not check_password_hash(user.password, password):
             flash("Identifiants incorrects.", "danger")
-            return redirect(url_for("connexion_page"))
+            return redirect(url_for("login_page"))
 
         if getattr(user, "is_banned", False):
             flash("Votre compte a été suspendu. Contactez le support.", "danger")
-            return redirect(url_for("connexion_page"))
+            return redirect(url_for("login_page"))
 
         session.clear()
         session["user_id"] = user.id
@@ -491,7 +491,7 @@ def connexion_page():
         flash(f"Connexion réussie ! Bienvenue {user.username}.", "success")
         return redirect(url_for("dashboard_page"))
 
-    return render_template("connexion.html")
+    return render_template("login.html")
 
 
 SOLEAS_API_KEY = "SP_DQnD9bXH0-vd5R-jxtc0EXUsa_f0wUxBzCkW0AhCu6Q_AP"
@@ -609,7 +609,7 @@ def dashboard_bloque():
     country_code = COUNTRY_CODE.get(user.country.strip())
     if not country_code:
         flash("Pays non supporté.", "danger")
-        return redirect(url_for("connexion_page"))
+        return redirect(url_for("login_page"))
 
     if request.method == "POST":
         operator_name = request.form.get("operator")
@@ -716,7 +716,7 @@ def verify_payment():
 def logout_page():
     session.clear()
     flash("Déconnexion effectuée.", "info")
-    return redirect(url_for("connexion_page"))
+    return redirect(url_for("login_page"))
 
 
 def get_global_stats():
@@ -837,20 +837,20 @@ def dashboard_pay_ok():
     user_id = session.get("user_id")
     if not user_id:
         flash("Vous devez vous connecter pour accéder au dashboard.", "danger")
-        return redirect(url_for("connexion_page"))
+        return redirect(url_for("login_page"))
 
     user = db.session.get(User, user_id)
     if not user:
         session.clear()
         flash("Session invalide, veuillez vous reconnecter.", "danger")
-        return redirect(url_for("connexion_page"))
+        return redirect(url_for("login_page"))
 
     if not user.has_seen_pay_ok:
         user.has_seen_pay_ok = True
         db.session.commit()
 
     referral_code = user.username
-    referral_link = url_for("inscription_page", _external=True) + f"?ref={referral_code}"
+    referral_link = url_for("register_page", _external=True) + f"?ref={referral_code}"
 
     total_users, total_deposits, total_withdrawn = get_global_stats()
     revenu_cumule = (user.solde_parrainage or 0) + (user.solde_revenu or 0)
@@ -888,16 +888,16 @@ def dashboard_page():
     user_id = session.get("user_id")
     if not user_id:
         flash("Vous devez vous connecter pour accéder au dashboard.", "danger")
-        return redirect(url_for("connexion_page"))
+        return redirect(url_for("login_page"))
 
     user = db.session.get(User, user_id)
     if not user:
         session.clear()
         flash("Session invalide, veuillez vous reconnecter.", "danger")
-        return redirect(url_for("connexion_page"))
+        return redirect(url_for("login_page"))
 
     referral_code = user.username
-    referral_link = url_for("inscription_page", _external=True) + f"?ref={referral_code}"
+    referral_link = url_for("register_page", _external=True) + f"?ref={referral_code}"
 
     if not user_is_activated(user) and not user.has_seen_pay_ok:
         return redirect(url_for("dashboard_bloque"))
@@ -1472,7 +1472,7 @@ def team_page():
     user = get_logged_in_user()
 
     referral_code = user.username
-    referral_link = url_for("inscription_page", _external=True) + f"?ref={referral_code}"
+    referral_link = url_for("register_page", _external=True) + f"?ref={referral_code}"
 
     level1 = User.query.filter_by(parrain=user.username).all()
     level1_usernames = [u.username for u in level1]
