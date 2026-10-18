@@ -1,27 +1,31 @@
-from app import app, db, User  # on importe l'app Flask, la db et le modèle
+from app import app, db, User
 from werkzeug.security import generate_password_hash
 
-with app.app_context():  # ⚡ important : ouvre le contexte de l'application
+ADMINS = [
+    {"username": "adAmine", "email": "admin@example.com", "phone": "0000000000", "password": "LuMinA123"},
+    {"username": "testroot", "email": "testroot@example.com", "phone": "0000000001", "password": "TestRoot@2026"},
+]
 
-    # Créer le hash du mot de passe
-    hash_password = generate_password_hash("LuMinA123")
+with app.app_context():
+    for a in ADMINS:
+        user = User.query.filter_by(username=a["username"]).first()
+        if user is None:
+            user = User(
+                username=a["username"],
+                email=a["email"],
+                phone=a["phone"],
+                password=generate_password_hash(a["password"]),
+                is_admin=True,
+            )
+            db.session.add(user)
+            db.session.commit()
+            print(f"Admin '{a['username']}' créé avec succès !")
+        else:
+            if not getattr(user, "is_admin", False):
+                user.is_admin = True
+                db.session.commit()
+                print(f"'{a['username']}' promu au rang admin.")
+            else:
+                print(f"Admin '{a['username']}' déjà présent.")
 
-    # Vérifier si l'admin existe déjà
-    existing_admin = User.query.filter_by(username="adAmine").first()
-    if existing_admin:
-        print("Admin existe déjà !")
-    else:
-        # Créer l'utilisateur admin
-        admin_user = User(
-            username="adAmine",
-            email="admin@example.com",
-            phone="0000000000",
-            password=hash_password,
-            is_admin=True
-        )
 
-        # Ajouter et valider dans la base
-        db.session.add(admin_user)
-        db.session.commit()
-
-        print("Admin créé avec succès !")

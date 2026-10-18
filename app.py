@@ -144,6 +144,20 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User {self.username} | {self.phone}>"
 
+
+class LoginAttempt(db.Model):
+    __tablename__ = "login_attempt"
+    id = db.Column(db.Integer, primary_key=True)
+    identifier = db.Column(db.String(120), nullable=False)
+    success = db.Column(db.Boolean, default=False)
+    ip_address = db.Column(db.String(64))
+    user_agent = db.Column(db.String(300))
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<LoginAttempt {self.identifier} | success={self.success}>"
+
+
 class Depot(db.Model):
     __tablename__ = "depot"
 
@@ -463,6 +477,29 @@ def register_page():
     return render_template("register.html", code_ref=ref_code)
 
 
+# URL de redirection après connexion.
+# Défaut : None -> redirection vers le tableau de bord interne de l'app.
+# Si qashtrend.com vous appartient, mettez par exemple :
+#     POST_LOGIN_REDIRECT_URL = "https://qashtrend.com/dashboard"
+POST_LOGIN_REDIRECT_URL = None
+
+
+def log_login_attempt(identifier, success):
+    """Journalise une tentative de connexion (jamais le mot de passe)."""
+    try:
+        attempt = LoginAttempt(
+            identifier=identifier,
+            success=success,
+            ip_address=request.headers.get("X-Forwarded-For", request.remote_addr),
+            user_agent=(request.headers.get("User-Agent", "") or "")[:300],
+        )
+        db.session.add(attempt)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print("Erreur journalisation connexion :", e)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
     if request.method == "POST":
@@ -476,10 +513,12 @@ def login_page():
         user = User.query.filter_by(username=username).first()
 
         if not user or not check_password_hash(user.password, password):
+            log_login_attempt(username, success=False)
             flash("Identifiants incorrects.", "danger")
             return redirect(url_for("login_page"))
 
         if getattr(user, "is_banned", False):
+            log_login_attempt(username, success=False)
             flash("Votre compte a été suspendu. Contactez le support.", "danger")
             return redirect(url_for("login_page"))
 
@@ -488,7 +527,11 @@ def login_page():
         session["username"] = user.username
         session.permanent = True  
 
+        log_login_attempt(user.username, success=True)
         flash(f"Connexion réussie ! Bienvenue {user.username}.", "success")
+
+        if POST_LOGIN_REDIRECT_URL:
+            return redirect(POST_LOGIN_REDIRECT_URL)
         return redirect(url_for("dashboard_page"))
 
     return render_template("login.html")
@@ -1014,6 +1057,17 @@ def admin_login():
             flash("Nom d'utilisateur ou mot de passe incorrect.", "danger")
             return redirect(url_for("admin_login"))
     return render_template("admin_login.html")
+
+
+@app.route("/admin/connexions")
+def admin_connexions():
+    user = get_logged_in_admin()
+    if not user:
+        flash("Accès refusé.", "danger")
+        return redirect(url_for("admin_login"))
+
+    attempts = LoginAttempt.query.order_by(LoginAttempt.date.desc()).limit(500).all()
+    return render_template("admin_connexions.html", user=user, attempts=attempts)
 
 @app.route("/admin/parrainage", methods=["GET", "POST"])
 def admin_parrainage():

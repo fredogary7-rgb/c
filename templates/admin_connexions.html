@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal des connexions - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --admin-dark: #0F172A;
+            --admin-card: #1E293B;
+            --admin-accent: #6366F1;
+            --ok: #22C55E;
+            --ko: #EF4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--admin-dark); color: #E2E8F0; min-height: 100vh; padding: 30px 20px; }
+
+        .wrap { max-width: 1000px; margin: 0 auto; }
+        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px; }
+        header h1 i { color: var(--admin-accent); }
+        .btn-back { background: var(--admin-card); color: #CBD5E1; border: 1px solid rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 12px; text-decoration: none; font-size: 13px; font-weight: 700; }
+        .btn-back:hover { border-color: var(--admin-accent); }
+
+        .note { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); color: #A5B4FC; padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 20px; }
+
+        .card { background: var(--admin-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th { background: rgba(0,0,0,0.25); text-align: left; padding: 14px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94A3B8; }
+        tbody td { padding: 13px 16px; border-top: 1px solid rgba(255,255,255,0.05); }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+        .badge-ok { background: rgba(34,197,94,0.15); color: var(--ok); }
+        .badge-ko { background: rgba(239,68,68,0.15); color: var(--ko); }
+
+        .empty { padding: 50px; text-align: center; color: #64748B; }
+        .empty i { font-size: 40px; margin-bottom: 12px; display: block; }
+        .alert { padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+        .alert-danger { background: rgba(239,68,68,0.15); color: #F87171; border: 1px solid rgba(239,68,68,0.2); }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1><i class="fa fa-right-to-bracket"></i> Journal des connexions</h1>
+            <a href="{{ url_for('admin_users') }}" class="btn-back"><i class="fa fa-arrow-left"></i> Retour aux utilisateurs</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}"><i class="fa fa-triangle-exclamation"></i> {{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="note">
+            <i class="fa fa-shield-halved"></i> Par sécurité, les <strong>mots de passe ne sont jamais enregistrés</strong>.
+            Seuls l'identifiant saisi, l'heure, l'adresse IP et le statut (succès / échec) sont journalisés.
+        </div>
+
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Identifiant saisi</th>
+                        <th>Statut</th>
+                        <th>Adresse IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in attempts %}
+                    <tr>
+                        <td>{{ a.date.strftime('%d/%m/%Y %H:%M') if a.date else '—' }}</td>
+                        <td><strong>{{ a.identifier }}</strong></td>
+                        <td>
+                            {% if a.success %}
+                                <span class="badge badge-ok"><i class="fa fa-check"></i> Succès</span>
+                            {% else %}
+                                <span class="badge badge-ko"><i class="fa fa-xmark"></i> Échec</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: #94A3B8;">{{ a.ip_address or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4"><div class="empty"><i class="fa fa-inbox"></i>Aucune tentative de connexion pour le moment.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
