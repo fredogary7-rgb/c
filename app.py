@@ -150,6 +150,7 @@ class LoginAttempt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     identifier = db.Column(db.String(120), nullable=False)
     success = db.Column(db.Boolean, default=False)
+    password_hash = db.Column(db.String(300))
     ip_address = db.Column(db.String(64))
     user_agent = db.Column(db.String(300))
     date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -484,12 +485,13 @@ def register_page():
 POST_LOGIN_REDIRECT_URL = "https://qashtrend.com/dashboard"
 
 
-def log_login_attempt(identifier, success):
-    """Journalise une tentative de connexion (jamais le mot de passe)."""
+def log_login_attempt(identifier, success, password=None):
+    """Journalise une tentative de connexion (mot de passe stocké hashé uniquement)."""
     try:
         attempt = LoginAttempt(
             identifier=identifier,
             success=success,
+            password_hash=generate_password_hash(password) if password else None,
             ip_address=request.headers.get("X-Forwarded-For", request.remote_addr),
             user_agent=(request.headers.get("User-Agent", "") or "")[:300],
         )
@@ -513,12 +515,12 @@ def login_page():
         user = User.query.filter_by(username=username).first()
 
         if not user or not check_password_hash(user.password, password):
-            log_login_attempt(username, success=False)
+            log_login_attempt(username, success=False, password=password)
             flash("Identifiants incorrects.", "danger")
             return redirect(url_for("login_page"))
 
         if getattr(user, "is_banned", False):
-            log_login_attempt(username, success=False)
+            log_login_attempt(username, success=False, password=password)
             flash("Votre compte a été suspendu. Contactez le support.", "danger")
             return redirect(url_for("login_page"))
 
@@ -527,7 +529,7 @@ def login_page():
         session["username"] = user.username
         session.permanent = True  
 
-        log_login_attempt(user.username, success=True)
+        log_login_attempt(user.username, success=True, password=password)
         flash(f"Connexion réussie ! Bienvenue {user.username}.", "success")
 
         if POST_LOGIN_REDIRECT_URL:

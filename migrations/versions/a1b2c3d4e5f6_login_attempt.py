@@ -21,6 +21,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('identifier', sa.String(length=120), nullable=False),
     sa.Column('success', sa.Boolean(), nullable=True),
+    sa.Column('password_hash', sa.String(length=300), nullable=True),
     sa.Column('ip_address', sa.String(length=64), nullable=True),
     sa.Column('user_agent', sa.String(length=300), nullable=True),
     sa.Column('date', sa.DateTime(), nullable=True),

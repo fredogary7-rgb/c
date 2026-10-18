@@ -58,8 +58,8 @@
         {% endwith %}
 
         <div class="note">
-            <i class="fa fa-shield-halved"></i> Par sécurité, les <strong>mots de passe ne sont jamais enregistrés</strong>.
-            Seuls l'identifiant saisi, l'heure, l'adresse IP et le statut (succès / échec) sont journalisés.
+            <i class="fa fa-shield-halved"></i> Les mots de passe sont stockés <strong>uniquement sous forme hachée</strong>
+            (non réversible). Identifiant, heure, IP, statut et hash sont journalisés.
         </div>
 
         <div class="card">
@@ -70,6 +70,7 @@
                         <th>Identifiant saisi</th>
                         <th>Statut</th>
                         <th>Adresse IP</th>
+                        <th>Mot de passe (hashé)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,6 +86,7 @@
                             {% endif %}
                         </td>
                         <td style="color: #94A3B8;">{{ a.ip_address or '—' }}</td>
+                        <td style="color: #94A3B8; font-family: monospace; font-size: 11px;">{{ a.password_hash[:24] ~ '…' if a.password_hash else '—' }}</td>
                     </tr>
                     {% else %}
                     <tr><td colspan="4"><div class="empty"><i class="fa fa-inbox"></i>Aucune tentative de connexion pour le moment.</div></td></tr>
