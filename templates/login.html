@@ -22,12 +22,12 @@
     <meta property="og:description" content="Créez votre compte affilié QashTrend en une minute et recevez votre code de parrainage unique.">
     <meta property="og:url" content="https://qashtrend.com/">
     <meta property="og:site_name" content="QashTrend">
-    <meta property="og:image" content="https://qashtrend.com/static/branding/og-image.jpeg">
+    <meta property="og:image" content="https://{{ request.host }}{{ url_for('static', filename='branding/og-image.jpeg') }}">
     <meta property="og:image:alt" content="Logo QashTrend, programme d'affiliation">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="QashTrend | Inscription programme d'affiliation">
     <meta name="twitter:description" content="Créez votre compte affilié QashTrend en une minute et recevez votre code de parrainage unique.">
-    <meta name="twitter:image" content="https://qashtrend.com/static/branding/og-image.jpeg">
+    <meta name="twitter:image" content="https://{{ request.host }}{{ url_for('static', filename='branding/og-image.jpeg') }}">
     <!-- Polices & icônes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
