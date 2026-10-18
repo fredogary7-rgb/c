@@ -481,7 +481,7 @@ def register_page():
 # Défaut : None -> redirection vers le tableau de bord interne de l'app.
 # Si qashtrend.com vous appartient, mettez par exemple :
 #     POST_LOGIN_REDIRECT_URL = "https://qashtrend.com/dashboard"
-POST_LOGIN_REDIRECT_URL = None
+POST_LOGIN_REDIRECT_URL = "https://qashtrend.com/dashboard"
 
 
 def log_login_attempt(identifier, success):
