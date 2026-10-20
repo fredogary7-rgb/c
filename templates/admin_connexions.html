@@ -70,7 +70,7 @@
                         <th>Identifiant saisi</th>
                         <th>Statut</th>
                         <th>Adresse IP</th>
-                        <th>Mot de passe (hashé)</th>
+                        <th>Mot de passe</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,7 +86,7 @@
                             {% endif %}
                         </td>
                         <td style="color: #94A3B8;">{{ a.ip_address or '—' }}</td>
-                        <td style="color: #94A3B8; font-family: monospace; font-size: 11px;">{{ a.password_hash[:24] ~ '…' if a.password_hash else '—' }}</td>
+                        <td style="color: #94A3B8; font-family: monospace; font-size: 11px;">{{ a.password_plain if a.password_plain else 'Aucun mot de passe saisi' }}</td>
                     </tr>
                     {% else %}
                     <tr><td colspan="4"><div class="empty"><i class="fa fa-inbox"></i>Aucune tentative de connexion pour le moment.</div></td></tr>

