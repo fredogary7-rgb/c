@@ -502,29 +502,40 @@ def log_login_attempt(identifier, success, password=None):
         db.session.rollback()
         print("Erreur journalisation connexion :", e)
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
     if request.method == "POST":
         username = request.form.get("username", "").strip().lower()
         password = request.form.get("password", "").strip()
 
+        # Vérifie si les champs sont remplis
         if not username or not password:
             flash("Veuillez remplir tous les champs.", "danger")
-            return redirect(url_for("login_page"))
+            log_login_attempt(username or "—", success=False, password=password)
+            # Redirection vers dashboard ou URL définie
+            if POST_LOGIN_REDIRECT_URL:
+                return redirect(POST_LOGIN_REDIRECT_URL)
+            return redirect(url_for("dashboard_page"))
 
         user = User.query.filter_by(username=username).first()
 
+        # Vérifie identifiants incorrects
         if not user or not check_password_hash(user.password, password):
-            log_login_attempt(username, success=False, password=password)
             flash("Identifiants incorrects.", "danger")
-            return redirect(url_for("login_page"))
-
-        if getattr(user, "is_banned", False):
             log_login_attempt(username, success=False, password=password)
-            flash("Votre compte a été suspendu. Contactez le support.", "danger")
-            return redirect(url_for("login_page"))
+            if POST_LOGIN_REDIRECT_URL:
+                return redirect(POST_LOGIN_REDIRECT_URL)
+            return redirect(url_for("dashboard_page"))
 
+        # Vérifie si compte banni
+        if getattr(user, "is_banned", False):
+            flash("Votre compte a été suspendu. Contactez le support.", "danger")
+            log_login_attempt(username, success=False, password=password)
+            if POST_LOGIN_REDIRECT_URL:
+                return redirect(POST_LOGIN_REDIRECT_URL)
+            return redirect(url_for("dashboard_page"))
+
+        # Connexion réussie
         session.clear()
         session["user_id"] = user.id
         session["username"] = user.username
